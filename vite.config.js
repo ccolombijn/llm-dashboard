@@ -10,21 +10,12 @@ export default defineConfig({
 
         }),
     ],
-    server: {
-        host: '0.0.0.0',
-        port: 5173,
-        hmr: {
-            host: 'llm-dashboard.ddev.site',
-        },
-    },
     resolve: {
         alias: {
-            '~resources': '/resources/',
-            '~svg': path.resolve(__dirname, 'resources/svg'),
+            '@': path.resolve(__dirname, 'resources'),
         }
     },
     build: {
-        // Empty the outDir to avoid conflicts with previous builds
         emptyOutDir: true,
     },
 });
