@@ -14,10 +14,10 @@
         @foreach($availableApis as $apiName => $isConfigured)
         <li class="mb-2 flex items-center">
           @if($isConfigured)
-          <img src="{{ asset('svg/' . $apiName . '-color.svg') }}" alt="{{ ucfirst($apiName) }} Logo" class="mr-2 h-6 w-6">
+          <img src="{{ asset('build/svg/' . $apiName . '.svg') }}" alt="{{ ucfirst($apiName) }} Logo" class="mr-2 h-6 w-6">
           <span>{{ ucfirst($apiName) }} API: <span class="font-medium text-green-600">Configured</span></span>
           @else
-          <img src="{{ asset('svg/' . $apiName . '-color.svg') }}" alt="{{ ucfirst($apiName) }} Logo" class="mr-2 h-6 w-6 opacity-50">
+          <img src="{{ asset('build/svg/' . $apiName . '.svg') }}" alt="{{ ucfirst($apiName) }} Logo" class="mr-2 h-6 w-6 opacity-50">
           <span>{{ ucfirst($apiName) }} API: <span class="font-medium text-red-600">Not Configured</span></span>
           @endif
         </li>
