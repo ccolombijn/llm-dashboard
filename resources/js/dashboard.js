@@ -10,6 +10,12 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
         isTesting: false,
         availableModels: {},
         availableApis: initialAvailableApis, // Store the passed data
+        providerApiKeyUrls: {
+            openai: 'https://platform.openai.com/api-keys',
+            anthropic: 'https://console.anthropic.com/settings/admin-keys', 
+            mistral: 'https://admin.mistral.ai/organization/api-keys',
+            gemini: 'https://aistudio.google.com/app/apikey',
+        },
         selectedModel: '',
 
         openConfigModal(provider) {
@@ -17,6 +23,13 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
             this.modalProvider = provider;
             this.$nextTick(() => this.$refs.apiKeyInput.focus());
         },
+
+        getAPIKey(provider) {
+            window.open(this.providerApiKeyUrls[provider] ,  '_blank');
+            //return this.providerApiKeyUrls[provider] || '#';
+        },
+
+        
 
         async openTestModal(provider, prompt = null, ) {
             this.isTestModalOpen = true;
