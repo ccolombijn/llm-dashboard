@@ -62,8 +62,8 @@ final class AIRepository implements AIRepositoryInterface
     public function isProviderConfigured(string $provider): bool
     {
         return match ($provider) {
-            'openai' => !empty(config('openai.api_key')),
-            'gemini' => !empty(config('services.gemini.api_key')),
+            'openai' => !empty(config('openai.api_key')), // The key is directly in the openai config
+            'gemini' => !empty(config('gemini.api_key')), // The key is directly in the gemini config
             'anthropic' => !empty(config('services.anthropic.api_key')),
             'mistral' => !empty(config('mistral.api_key')),
             default => false,

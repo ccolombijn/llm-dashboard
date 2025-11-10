@@ -1,34 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Services\DotEnvService;
 use App\Contracts\AIRepositoryInterface;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\View\View;
 
-class DashboardController extends Controller
+final class DashboardController extends Controller
 {
-    /**
-     * Display the dashboard.
-     *
-     * @param AIRepositoryInterface $aiRepository
-     * @return \Illuminate\View\View
-     */
-    public function index(AIRepositoryInterface $aiRepository)
+    public function __construct(
+        private readonly AIRepositoryInterface $aiRepository,
+        private readonly DotEnvService $dotEnvService
+    ) {}
+
+    public function index(): View
     {
-        // Determine which LLM APIs are configured based on environment variables
         $availableApis = [
-            'openai' => $aiRepository->isProviderConfigured('openai'),
-            'gemini' => $aiRepository->isProviderConfigured('gemini'),
-            'anthropic' => $aiRepository->isProviderConfigured('anthropic'),
-            'mistral' => $aiRepository->isProviderConfigured('mistral'),
+            'openai' => $this->aiRepository->isProviderConfigured('openai'),
+            'gemini' => $this->aiRepository->isProviderConfigured('gemini'),
+            'anthropic' => $this->aiRepository->isProviderConfigured('anthropic'),
+            'mistral' => $this->aiRepository->isProviderConfigured('mistral'),
         ];
 
-        // You might still want to pass some general info, but 'llms' as previously defined
-        // might be redundant if 'availableApis' covers the intent.
-        // For now, let's just pass the available APIs.
-        return view('dashboard', [
-            'availableApis' => $availableApis,
+        $prompts = config('ai.prompts', []);
+
+        return view('dashboard', compact('availableApis', 'prompts'));
+    }
+
+    public function updateApiKey(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'provider' => ['required', 'string', 'in:openai,gemini,anthropic,mistral'],
+            'api_key' => ['required', 'string'],
         ]);
+
+        $envKey = strtoupper($validated['provider']) . '_API_KEY';
+        $apiKey = $validated['api_key'];
+
+        $this->dotEnvService->setKey($envKey, $apiKey);
+
+        return redirect()->route('dashboard')->with('success', ucfirst($validated['provider']) . ' API key updated successfully!');
     }
 }

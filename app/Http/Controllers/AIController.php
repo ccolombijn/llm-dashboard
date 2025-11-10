@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\AIRepositoryInterface;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -22,7 +23,7 @@ final class AIController extends Controller
      */
     public function generate(Request $request): JsonResponse|StreamedResponse
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'prompt' => ['required', 'string', 'max:4096'],
             'input' => ['sometimes', 'string', 'max:4096'],
             'history' => ['sometimes', 'array'],
@@ -30,6 +31,11 @@ final class AIController extends Controller
             'model' => ['sometimes', 'string'],
             'provider' => ['sometimes', 'string', 'in:openai,gemini,anthropic,mistral'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+        $data = $validator->validated();
 
         return $this->aiRepository->generate($data, $data['provider'] ?? null);
     }
