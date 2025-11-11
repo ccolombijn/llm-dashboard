@@ -12,11 +12,12 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
         availableApis: initialAvailableApis, // Store the passed data
         providerApiKeyUrls: {
             openai: 'https://platform.openai.com/api-keys',
-            anthropic: 'https://console.anthropic.com/settings/admin-keys', 
+            anthropic: 'https://console.anthropic.com/settings/admin-keys',
             mistral: 'https://admin.mistral.ai/organization/api-keys',
             gemini: 'https://aistudio.google.com/app/apikey',
         },
         selectedModel: '',
+        selectedProvider: '',
 
         openConfigModal(provider) {
             this.isConfigModalOpen = true;
@@ -29,7 +30,7 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
             //return this.providerApiKeyUrls[provider] || '#';
         },
 
-        
+
 
         async openTestModal(provider, prompt = null, ) {
             this.isTestModalOpen = true;
