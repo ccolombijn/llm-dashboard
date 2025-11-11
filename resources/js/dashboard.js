@@ -1,7 +1,8 @@
-export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) {
+export default function dashboard(updateHandlerUrl, generateUrl, modelsUrl, initialAvailableApis, defaultHandler) {
     return {
         isConfigModalOpen: false,
         isTestModalOpen: false,
+        isChangeDefaultModelModalOpen: false,
         modalProvider: '',
         testPrompt: 'Write a short haiku about a robot.',
         testInput: '',
@@ -9,6 +10,7 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
         testResponseDetails: null,
         isTesting: false,
         availableModels: {},
+        modelError: {}, // To track errors per provider
         availableApis: initialAvailableApis, // Store the passed data
         providerApiKeyUrls: {
             openai: 'https://platform.openai.com/api-keys',
@@ -18,6 +20,20 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
         },
         selectedModel: '',
         selectedProvider: '',
+        isApiTest: false,
+        defaultHandler: defaultHandler,
+        newDefaultModel: '',
+        showSuccessNotification: false,
+        successNotificationMessage: '',
+
+        get providerDefaultModel() {
+            if (!defaultHandler) return null;
+            const [defaultProvider, defaultModel] = defaultHandler.split(':');
+            if (this.selectedProvider === defaultProvider) {
+                return defaultModel;
+            }
+            return null;
+        },
 
         openConfigModal(provider) {
             this.isConfigModalOpen = true;
@@ -30,6 +46,24 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
             //return this.providerApiKeyUrls[provider] || '#';
         },
 
+        async openChangeDefaultModelModal(provider) {
+            this.modalProvider = provider;
+            await this.fetchModelsIfNeeded(provider);
+
+            const [defaultProvider, defaultModel] = this.defaultHandler.split(':');
+            if (provider === defaultProvider) {
+                this.newDefaultModel = defaultModel;
+            } else {
+                // Set to the first available model for that provider if not the default
+                const providerModels = this.availableModels.models?.[provider];
+                this.newDefaultModel = providerModels?.[0]?.id || '';
+            }
+
+            this.isChangeDefaultModelModalOpen = true;
+        },
+
+
+
 
 
         async openTestModal(provider, prompt = null, ) {
@@ -38,30 +72,28 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
             this.testResponse = '';
             this.testResponseDetails = null;
             this.testInput = '';
-            this.selectedModel = '';
+
             if (provider) { // Called from "Test" button next to a specific API
+                this.isApiTest = true;
                 this.modalProvider = provider;
                 this.selectedProvider = provider;
                 this.testPrompt = 'Write a short haiku about a robot.'; // Default for API test
+                // Set default model from defaultHandler if provider matches
+                const [defaultProvider, defaultModel] = defaultHandler.split(':');
+                this.selectedModel = provider === defaultProvider ? defaultModel : '';
             } else { // Called from "Test" button next to a prompt
+                this.isApiTest = false;
                 // Find the first configured provider as a default for prompt tests
                 const firstConfigured = Object.keys(this.availableApis).find(key => this.availableApis[key]);
                 this.modalProvider = firstConfigured || '';
                 this.selectedProvider = firstConfigured || '';
                 this.testPrompt = prompt; // Set the specific prompt
             }
+            this.selectedModel = this.providerDefaultModel || '';
+
 
             // Fetch models if they haven't been fetched yet
-             if (Object.keys(this.availableModels).length === 0 || (this.selectedProvider && (!this.availableModels.models || !this.availableModels.models[this.selectedProvider]))) {
-                try {
-                    const response = await fetch(modelsUrl); // Assuming modelsUrl is the correct route
-                    const data = await response.json();
-                    this.availableModels = data;
-                } catch (error) {
-                    console.error('Could not fetch AI models:', error);
-                }
-            }
-
+            await this.fetchModelsIfNeeded(this.selectedProvider);
 
             this.$nextTick(() => this.$refs.testPromptInput.focus());
         },
@@ -112,6 +144,48 @@ export default function dashboard(generateUrl, modelsUrl, initialAvailableApis) 
                 console.error(error);
             } finally {
                 this.isTesting = false;
+            }
+        },
+
+        async fetchModelsIfNeeded(provider) {
+            if (!provider) return;
+            const hasModels = this.availableModels.models && this.availableModels.models[provider];
+            this.modelError[provider] = false; // Reset error state
+            if (Object.keys(this.availableModels).length === 0 || !hasModels) {
+                try {
+                    const response = await fetch(modelsUrl);
+                    const data = await response.json();
+                    this.availableModels = data;
+                    this.modelError[provider] = !data.models?.[provider]?.length;
+                } catch (error) {
+                    this.modelError[provider] = true;
+                    console.error('Could not fetch AI models:', error);
+                }
+            }
+        },
+
+        async updateDefaultHandler() {
+            const newHandler = `${this.modalProvider}:${this.newDefaultModel}`;
+            try {
+                const response = await fetch(updateHandlerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ handler: newHandler })
+                });
+                if (response.ok) {
+                    this.defaultHandler = newHandler;
+                    this.isChangeDefaultModelModalOpen = false;
+                    this.showSuccessNotification = true;
+                    this.successNotificationMessage = 'Default handler updated successfully!';
+                    setTimeout(() => {
+                        this.showSuccessNotification = false;
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Failed to update default handler:', error);
             }
         }
     };

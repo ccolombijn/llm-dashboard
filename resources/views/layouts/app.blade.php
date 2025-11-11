@@ -32,7 +32,7 @@
         ];
     }
     @endphp
-    <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900" x-data="app({{ Js::from($pageData) }})" x-init="init()">
+    <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900">
         <div class="min-h-screen">
             @yield('content')
         </div>
