@@ -74,6 +74,14 @@ final class AIController extends Controller
     public function getModels(): JsonResponse
     {
         $models = $this->aiRepository->getAvailableModels();
+        if (isset($models['gemini'])) {
+            $models['gemini'] = array_map(function ($model) {
+                if (is_array($model) && isset($model['id']) && str_starts_with($model['id'], 'models/')) {
+                    $model['id'] = str_replace('models/', '', $model['id']);
+                }
+                return $model;
+            }, $models['gemini']);
+        }
 
         return response()->json(['models' => $models]);
     }

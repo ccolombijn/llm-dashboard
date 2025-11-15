@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .filter-indigo-500 {
+        filter: invert(39%) sepia(57%) saturate(2558%) hue-rotate(215deg) brightness(98%) contrast(92%);
+    }
+</style>
 <div class="container mx-auto p-4" x-data="dashboard(
         '{{ route('dashboard.update-default-handler') }}',
         '{{ route('ai.generate') }}',
@@ -23,232 +28,40 @@
             x-cloak>
         </div>
         <h1 class="text-2xl font-bold dark:text-white">LLM Dashboard</h1>
-        <div class="relative" x-data="{
-                theme: localStorage.getItem('theme') || 'system',
-                themeSwitcherOpen: false,
-                setTheme(newTheme) {
-                    this.theme = newTheme;
-                    if (newTheme === 'system') {
-                        localStorage.removeItem('theme');
-                        document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-                    } else {
-                        localStorage.setItem('theme', newTheme);
-                        document.documentElement.setAttribute('data-theme', newTheme);
-                    }
-                },
-                init() {
-                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                        if (this.theme === 'system') this.setTheme('system'); // Re-apply system theme on change
-                    });
-                }
-            }" x-init="init()">
-            <button @click="themeSwitcherOpen = !themeSwitcherOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <span class="sr-only">Open theme options</span>
-                <svg x-show="theme === 'light'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg x-show="theme === 'dark'" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                <svg x-show="theme === 'system'" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-            </button>
-            <div x-show="themeSwitcherOpen" @click.away="themeSwitcherOpen = false" x-cloak class="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" tabindex="-1">
-                <div class="py-1" role="none">
-                    <a href="#" @click.prevent="setTheme('light'); themeSwitcherOpen = false" class="flex items-center gap-2 text-gray-700 dark:text-gray-200 block px-4 py-2 text-sm" :class="{ 'bg-gray-100 dark:bg-gray-700': theme === 'light' }" role="menuitem" tabindex="-1">Light</a>
-                    <a href="#" @click.prevent="setTheme('dark'); themeSwitcherOpen = false" class="flex items-center gap-2 text-gray-700 dark:text-gray-200 block px-4 py-2 text-sm" :class="{ 'bg-gray-100 dark:bg-gray-700': theme === 'dark' }" role="menuitem" tabindex="-1">Dark</a>
-                    <a href="#" @click.prevent="setTheme('system'); themeSwitcherOpen = false" class="flex items-center gap-2 text-gray-700 dark:text-gray-200 block px-4 py-2 text-sm" :class="{ 'bg-gray-100 dark:bg-gray-700': theme === 'system' }" role="menuitem" tabindex="-1">System</a>
-                </div>
-            </div>
+        <div class="relative z-50">
+            <x-dashboard.theme-switcher />
         </div>
     </div>
 
     @if (session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300" role="alert">
+        <div x-data="{ show: true }"
+        x-show="show"
+        x-init="setTimeout(() => show = false, 10000)"
+        x-transition:leave="transition ease-in duration-300"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300"
+        role="alert">
             <span class="block sm:inline">{{ session('success') }}</span>
         </div>
     @endif
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Configured LLM APIs -->
-        <div class="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800">
-            <h2 class="text-xl font-semibold mb-2 flex items-center dark:text-gray-100">
-                Configured LLM APIs
-            </h2>
-            <ul class="space-y-3">
-                @foreach($availableApis as $apiName => $isConfigured)
-                    <li class="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <div class="flex items-center">
-                            <img src="{{ asset('build/svg/' . $apiName . '.svg') }}" alt="{{ ucfirst($apiName) }} Logo" class="mr-3 h-6 w-6 dark:invert @if(!$isConfigured) opacity-40 @endif">
-                            <span class="dark:text-gray-300">{{ ucfirst($apiName) }} API:
-                                @if($isConfigured)
-                                    <span class="font-medium text-green-600">Configured</span>
-                                @else
-                                    <span class="font-medium text-red-600">Not Configured</span>
-                                @endif
-                            </span>
-                        </div>
-
-                        @if($isConfigured)
-                            <div x-init="fetchModelsIfNeeded('{{ $apiName }}')">
-                                <template x-if="modelError['{{ $apiName }}']">
-                                    <span class="text-red-500 text-sm font-semibold">Could not fetch models</span>
-                                </template>
-                                <template x-if="!modelError['{{ $apiName }}']">
-                                    <div class="flex items-center space-x-2">
-                                        <button @click="openTestModal('{{ $apiName }}')" class="bg-green-500 text-white py-1 px-3 rounded-md hover:bg-green-600 text-sm font-semibold">
-                                            Test
-                                        </button>
-                                        <template x-if="defaultHandler.split(':')[0] === '{{ $apiName }}'">
-                                            <button @click="openChangeDefaultModelModal('{{ $apiName }}')" class="bg-indigo-500 text-white py-1 px-3 rounded-md hover:bg-indigo-600 text-sm font-semibold">
-                                                <span x-text="defaultHandler.split(':')[1]"></span>
-                                            </button>
-                                        </template>
-                                        <template x-if="defaultHandler.split(':')[0] !== '{{ $apiName }}'">
-                                            <button @click="openChangeDefaultModelModal('{{ $apiName }}')" class="bg-gray-400 text-white py-1 px-3 rounded-md hover:bg-gray-500 text-sm font-semibold dark:bg-gray-600 dark:hover:bg-gray-500">Set Default</button>
-                                        </template>
-                                    </button>
-                                </template>
-                            </div>
-                        @else
-                            <a href="#" @click="getAPIKey('{{ $apiName }}')" class="-mr-56 bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 text-sm font-semibold">Get API Key</a>
-                            <button @click="openConfigModal('{{ $apiName }}')" class="bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 text-sm font-semibold">
-                                Configure
-                            </button>
-                        @endif
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-
+        <x-dashboard.llm-apis :available-apis="$availableApis" />
         <!-- Available Prompts -->
-        <div class="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800">
-            <h2 class="text-xl font-semibold mb-2 flex items-center dark:text-gray-100">
-                Available Prompts
-            </h2>
-            @if(empty($prompts))
-                <p class="dark:text-gray-300">No prompts available.</p>
-            @else
-                <ul class="space-y-2">
-                    @foreach($prompts as $key => $prompt)
-                        <li class="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <div class="w-[85%]">
-                                <p class="font-semibold text-gray-800 dark:text-gray-200">{{ ucfirst(str_replace('_', ' ', $key)) }}</p>
-                                <p class="text-sm text-gray-600 truncate dark:text-gray-400"><code>{{ Str::limit($prompt, 100) }}</code></p>
-                            </div>
-                            <button type="button" @click="openTestModal(null, '{{ $key }}')" class="bg-green-500 text-white py-1 px-3 rounded-md hover:bg-green-600 text-sm font-semibold ml-2">
-                                Test
-                            </button>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
-            <a href="#" class="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
-                Create New Prompt
-            </a>
-        </div>
+        <x-dashboard.prompts :prompts="$prompts" :custom-prompt-keys="$customPromptKeys ?? []" />
     </div>
 
     <!-- Global Modals Container -->
-    <!-- Configuration Modal -->
+    
     <template x-teleport="body">
         <div>
-            <div x-show="isConfigModalOpen" x-cloak @keydown.escape.window="isConfigModalOpen = false" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <div @click.away="isConfigModalOpen = false" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md dark:bg-gray-800">
-                    <h3 class="text-lg font-bold mb-4 dark:text-white">Configure <span x-text="modalProvider.charAt(0).toUpperCase() + modalProvider.slice(1)"></span> API</h3>
-                    <form action="{{ route('dashboard.update-api-key') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="provider" :value="modalProvider">
-                        <div>
-                            <label for="api_key_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key</label>
-                            <input type="password" id="api_key_input" name="api_key" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" x-ref="apiKeyInput">
-                        </div>
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <button type="button" @click="isConfigModalOpen = false" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 font-semibold dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                            <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-semibold">Save Key</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Test Modal -->
-            <div x-show="isTestModalOpen" x-cloak @keydown.escape.window="isTestModalOpen = false" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <div @click.away="isTestModalOpen = false" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md dark:bg-gray-800">
-                    <h3 class="text-lg font-bold mb-4 dark:text-white">Test <span x-text="modalProvider.charAt(0).toUpperCase() + modalProvider.slice(1)"></span> API</h3>
-                    <form @submit.prevent="runTest()">
-                        <div>
-                            <label for="test_prompt_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt</label>
-                            <textarea id="test_prompt_input" x-model="testPrompt" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" x-ref="testPromptInput" rows="3"></textarea>
-                        </div>
-                        <div x-show="!isApiTest" class="mt-4">
-                            <label for="test_provider_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Provider</label>
-                            <select id="test_provider_select" x-model="selectedProvider" @change="modalProvider = selectedProvider" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <template x-for="(isConfigured, apiName) in availableApis" :key="apiName">
-                                    <option x-bind:value="apiName" x-text="apiName.charAt(0).toUpperCase() + apiName.slice(1)" x-show="isConfigured"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div class="mt-4">
-                            <label for="test_model_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model (Optional)</label>
-                            <select id="test_model_select" x-model="selectedModel" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="">Provider Default <span x-show="providerDefaultModel" x-text="`(${providerDefaultModel})`"></span></option>
-                                <template x-if="availableModels.models && availableModels.models[selectedProvider]">
-                                    <template x-for="model in availableModels.models[selectedProvider]" :key="model.id">
-                                        <option :value="model.id" x-text="model.id"></option>
-                                    </template>
-                                </template>
-                            </select>
-                        </div>
-                        <div x-show="testPrompt === 'explanation' || testPrompt === 'summarize'" class="mt-4">
-                            <label for="test_input_field" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Input</label>
-                            <input type="text" id="test_input_field" x-model="testInput" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                        </div>
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <button type="button" @click="isTestModalOpen = false" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 font-semibold dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
-                            <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 font-semibold flex items-center" :disabled="isTesting">
-                                <svg x-show="isTesting" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span x-text="isTesting ? 'Sending...' : 'Send Request'"></span>
-                            </button>
-                        </div>
-                    </form>
-
-                    <div x-show="testResponse" class="mt-4 p-4 bg-gray-100 rounded-md max-h-60 overflow-y-auto dark:bg-gray-700/50">
-                        <h4 class="font-semibold text-gray-800 mb-2 dark:text-gray-200">Response:</h4>
-                        <pre class="text-sm text-gray-700 whitespace-pre-wrap dark:text-gray-300" x-text="testResponse"></pre>
-                    </div>
-
-                    <div x-show="testResponseDetails" class="mt-4 text-xs text-gray-500 grid grid-cols-2 gap-x-4 gap-y-2">
-                        <div class="flex justify-between border-b pb-1 dark:border-gray-700">                            <span>Input Tokens:</span><span class="font-mono" x-text="testResponseDetails?.tokensIn"></span></div><div class="flex justify-between border-b pb-1 dark:border-gray-700">
-
-                        <div class="flex justify-between border-b pb-1 dark:border-gray-700">
-                            <span>Output Tokens:</span><span class="font-mono" x-text="testResponseDetails?.tokensOut"></span>
-                        </div>
-                        <div class="flex justify-between border-b pb-1 dark:border-gray-700"><span>Response Time:</span><span class="font-mono" x-text="`${testResponseDetails?.time}s`"></span></div>
-                        <div class="flex justify-between border-b pb-1 dark:border-gray-700"><span>Size:</span><span class="font-mono" x-text="testResponseDetails?.bytes"></span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Change Default Model Modal -->
-            <div x-show="isChangeDefaultModelModalOpen" x-cloak @keydown.escape.window="isChangeDefaultModelModalOpen = false" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <div @click.away="isChangeDefaultModelModalOpen = false" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md dark:bg-gray-800">
-                    <h3 class="text-lg font-bold mb-4 dark:text-white">Set Default Model for <span x-text="modalProvider.charAt(0).toUpperCase() + modalProvider.slice(1)"></span></h3>
-                    <form @submit.prevent="updateDefaultHandler">
-                        <div>
-                            <label for="default_model_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                            <select id="default_model_select" x-model="newDefaultModel" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <template x-if="availableModels.models && availableModels.models[modalProvider]">
-                                    <template x-for="model in availableModels.models[modalProvider]" :key="model.id">
-                                        <option :value="model.id" x-text="model.id"></option>
-                                    </template>
-                                </template>
-                            </select>
-                        </div>
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <button type="button" @click="isChangeDefaultModelModalOpen = false" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 font-semibold dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                            <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-semibold">Set as Default</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <x-dashboard.modals.config />
+            <x-dashboard.modals.change-model />
+            <x-dashboard.modals.test />
+            <x-dashboard.modals.delete-prompt />
+            <x-dashboard.modals.delete-api-key />
         </div>
     </template>
 </div>
