@@ -2,6 +2,9 @@
 <div x-show="activeModal === 'test'" x-cloak @keydown.escape.window="activeModal = null" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
     <div @click.away="activeModal = null" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md dark:bg-gray-800">
         <h3 class="text-lg font-bold mb-4 dark:text-white"><i class="fa-solid fa-comment-nodes"></i> Test <span x-text="modalProvider.charAt(0).toUpperCase() + modalProvider.slice(1)"></span> API</h3>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <strong>Note:</strong> A system prompt from your configuration is usually prepended to your prompt. This affects the input token count.
+        </div>
         <form @submit.prevent="runTest()">
             <div>
                 <label for="test_prompt_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt</label>
@@ -50,7 +53,7 @@
         <div x-show="testResponseDetails" class="mt-4 text-xs text-gray-500 grid grid-cols-2 gap-x-4 gap-y-2">
             <div class="flex justify-between border-b pb-1 dark:border-gray-700">                            
                 <span>Input Tokens:</span><span class="font-mono" x-text="testResponseDetails?.tokensIn"></span>
-            </div><div class="flex justify-between border-b pb-1 dark:border-gray-700">
+            </div>
 
             <div class="flex justify-between border-b pb-1 dark:border-gray-700">
                 <span>Output Tokens:</span><span class="font-mono" x-text="testResponseDetails?.tokensOut"></span>

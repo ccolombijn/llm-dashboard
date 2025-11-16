@@ -42,6 +42,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | TOON Conversion
+    |--------------------------------------------------------------------------
+    |
+    | Enable this to automatically convert JSON and YAML files to TOON format
+    | before sending them to the AI model. This can improve readability for
+    | the model.
+    |
+    */
+    'convert_to_toon' => env('AI_CONVERT_TO_TOON', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Task-Specific AI Configuration
     |--------------------------------------------------------------------------
     |

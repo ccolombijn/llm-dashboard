@@ -19,9 +19,11 @@
         "openai-php/laravel": "^0.17.1",
         "pug-php/pug": "^3.5",
         "pug-php/pug-filter-markdown": "^1.2",
+        "sbsaga/toon": "^1.1",
         "spatie/image": "^3.8",
         "spatie/laravel-image-optimizer": "^1.8",
-        "spatie/pdf-to-text": "^1.54"
+        "spatie/pdf-to-text": "^1.54",
+        "symfony/yaml": "^7.3"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",

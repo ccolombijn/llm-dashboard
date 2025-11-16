@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use Anthropic\Client as AnthropicClient;
+use App\Services\PomlService;
 use App\Contracts\AIRepositoryInterface;
 use Illuminate\Contracts\Foundation\Application;
+use App\Traits\FilePathResolver;
 use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
@@ -19,11 +21,14 @@ use InvalidArgumentException;
 use OpenAI\Client as OpenAIClient;
 use Spatie\PdfToText\Exceptions\BinaryNotFoundException;
 use Spatie\PdfToText\Pdf;
+use Sbsaga\Toon\Facades\Toon;
+use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 final class AIRepository implements AIRepositoryInterface
 {
+    use FilePathResolver;
     private ?OpenAIClient $openai = null;
     private ?GeminiClient $gemini = null;
     private ?AnthropicClient $anthropic = null;
@@ -228,7 +233,8 @@ final class AIRepository implements AIRepositoryInterface
     {
         Log::debug('Gemini: Starting streaming response.', ['model' => $model, 'prompt' => $prompt]);
         $gemini = $this->getGeminiClient();
-        $stream = is_array($prompt) ? $gemini->generativeModel($model)->streamGenerateContent(...$prompt) : $gemini->generativeModel($model)->streamGenerateContent($prompt);
+        // The prompt is always an array of Content parts
+        $stream = $gemini->generativeModel($model)->streamGenerateContent(...$prompt);
 
         return $this->streamResponse($stream, fn($chunk) => $chunk->text());
     }
@@ -386,32 +392,60 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function generateResponse(string $provider, string $model, array|string $prompt, ?string $systemPrompt = null): JsonResponse
     {
-        $responseText = match ($provider) {
-            'openai' => $this->getOpenAIClient()->chat()->create([
-                'model' => $model,
-                'messages' => $prompt,
-            ])->choices[0]->message->content,
+        $responsePayload = [];
 
-            'gemini' => $this->getGeminiClient()->generativeModel($model)->generateContent($prompt)->text(),
+        switch ($provider) {
+            case 'openai':
+                $response = $this->getOpenAIClient()->chat()->create([
+                    'model' => $model,
+                    'messages' => $prompt,
+                ]);
+                $responsePayload = [
+                    'response' => $response->choices[0]->message->content,
+                    'tokens_in' => $response->usage->promptTokens,
+                    'tokens_out' => $response->usage->completionTokens,
+                ];
+                break;
 
-            'anthropic' => $this->getAnthropicClient()->messages()->create([
-                'model' => $model,
-                'system' => $systemPrompt,
-                'messages' => $prompt,
-                'max_tokens' => 4096,
-            ])->content[0]->text,
+            case 'gemini':
+                $response = $this->getGeminiClient()->generativeModel($model)->generateContent($prompt);
+                $responsePayload = [
+                    'response' => $response->text(),
+                    'tokens_in' => $response->usageMetadata?->promptTokenCount ?? null,
+                    'tokens_out' => $response->usageMetadata?->candidatesTokenCount ?? null,
+                ];
+                break;
 
-            'mistral' => (function () use ($model, $prompt) {
+            case 'anthropic':
+                $response = $this->getAnthropicClient()->messages()->create([
+                    'model' => $model,
+                    'system' => $systemPrompt,
+                    'messages' => $prompt,
+                    'max_tokens' => 4096,
+                ]);
+                $responsePayload = [
+                    'response' => $response->content[0]->text,
+                    'tokens_in' => $response->usage->inputTokens,
+                    'tokens_out' => $response->usage->outputTokens,
+                ];
+                break;
+
+            case 'mistral':
                 /** @var \HelgeSverre\Mistral\Responses\Chat\CreateResponse $response */
                 $response = $this->getMistralClient()->chat()->create(['model' => $model, 'messages' => $prompt]);
 
-                return $response->choices[0]->message->content;
-            })(),
+                $responsePayload = [
+                    'response' => $response->choices[0]->message->content,
+                    'tokens_in' => $response->usage->promptTokens,
+                    'tokens_out' => $response->usage->completionTokens,
+                ];
+                break;
 
-            default => throw new InvalidArgumentException("Unsupported AI provider for non-streaming generation: [{$provider}]"),
-        };
+            default:
+                throw new InvalidArgumentException("Unsupported AI provider for non-streaming generation: [{$provider}]");
+        }
 
-        return response()->json(['response' => $responseText]);
+        return response()->json($responsePayload);
     }
 
 
@@ -487,6 +521,11 @@ final class AIRepository implements AIRepositoryInterface
     private function buildBasePrompt(array $data): string
     {
         $parts = $this->buildBasePromptParts($data);
+        // If the prompt was rendered by POML service, it's a complete prompt.
+        // We can return it directly, bypassing the standard assembly.
+        if (isset($parts['poml_rendered'])) {
+            return $parts['poml_rendered'];
+        }
 
         return trim(implode("\n\n", array_filter($parts)));
     }
@@ -505,9 +544,32 @@ final class AIRepository implements AIRepositoryInterface
         $prompt = (string) ($data['prompt'] ?? '');
         $isPredefinedPrompt = array_key_exists($prompt, config('ai.prompts', []));
 
+        /**
+        * Handle predefined prompts and POML templates
+        * @example
+        * prompt: "code_qa" <-- predefined prompt key; returns poml:ask
+        * input: "Your question about the code goes here."
+        * file_paths: ['path/to/your/codefile.php', 'path/to/another/file.js']
+        */
         // If the prompt is a key for a predefined prompt, get the full text.
+        
         if ($isPredefinedPrompt) {
             $promptTemplate = config('ai.prompts.' . $prompt);
+            // Check if the prompt is a POML template reference
+            if (is_string($promptTemplate) && str_starts_with($promptTemplate, 'poml:')) {
+                $templateName = substr($promptTemplate, 5);
+
+                $defaultFiles = $profileData['files'] ?? config('ai.default_files', []);
+                $requestFiles = $data['file_paths'] ?? [];
+                $allFiles = array_unique(array_merge($defaultFiles, $requestFiles));
+
+                $pomlVariables = [
+                    'prompt' => $data['input'] ?? '',
+                    'files' => $this->resolveAbsoluteFilePaths($allFiles),
+                ];
+
+                return ['poml_rendered' => $this->app->make(PomlService::class)->render($templateName, $pomlVariables)];
+            }
             $prompt = str_replace(':input', $data['input'] ?? '', $promptTemplate);
         }
 
@@ -528,7 +590,9 @@ final class AIRepository implements AIRepositoryInterface
                 $fileContent = $this->getFileContentForPrompt($filePath);
                 if (null !== $fileContent) {
                     $fileName = basename($filePath);
-                    $fileContext .= "File: `{$fileName}`\n\n```\n{$fileContent}\n```\n\n";
+                    $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                    $lang = config('ai.convert_to_toon', true) && in_array($extension, ['json', 'yml', 'yaml']) ? 'toon' : $extension;
+                    $fileContext .= "File: `{$fileName}`\n\n```{$lang}\n{$fileContent}\n```\n\n";
                 }
             }
         }
@@ -598,7 +662,32 @@ final class AIRepository implements AIRepositoryInterface
                 return "Error: Could not extract text from PDF file '{$filePath}'.";
             }
         }
+        if (config('ai.convert_to_toon', true)) {
+            // Convert YAML to TOON
+            if (in_array($extension, ['yml', 'yaml'])) {
+                try {
+                    $yamlContent = $storage->get($filePath);
+                    $parsedYaml = Yaml::parse($yamlContent);
+                    return (string) Toon::from($parsedYaml);
+                } catch (Throwable $e) {
+                    Log::error("Failed to convert YAML to TOON for file: {$fullPath}", ['exception' => $e]);
 
+                    return "Error: Could not convert YAML file '{$filePath}' to TOON format.";
+                }
+            }
+            // Convert JSON to TOON
+            if ($extension === 'json') {
+                try {
+                    $jsonContent = $storage->get($filePath);
+                    // The Toon class likely has a __toString method
+                    return (string) Toon::from($jsonContent);
+                } catch (Throwable $e) {
+                    Log::error("Failed to convert JSON to TOON for file: {$fullPath}", ['exception' => $e]);
+
+                    return "Error: Could not convert JSON file '{$filePath}' to TOON format.";
+                }
+            }
+        }
         return $storage->get($filePath);
     }
 
