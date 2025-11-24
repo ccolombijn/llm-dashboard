@@ -6,15 +6,18 @@ namespace App\Http\Controllers;
 
 use App\Services\DotEnvService;
 use App\Contracts\AIRepositoryInterface;
+use App\Contracts\ProfileRepositoryInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\File;
+
 final class DashboardController extends Controller
 {
     public function __construct(
         private readonly AIRepositoryInterface $aiRepository,
-        private readonly DotEnvService $dotEnvService
+        private readonly DotEnvService $dotEnvService,
+        private readonly ProfileRepositoryInterface $profileRepository
     ) {}
     /**
      * Display the dashboard with AI providers, models, and prompts.
@@ -39,8 +42,13 @@ final class DashboardController extends Controller
             $customPromptKeys = array_keys($jsonPrompts);
         }
 
-        return view('dashboard', compact('availableApis', 'prompts', 'customPromptKeys'));
-    
+        $profileNames = $this->profileRepository->getProfileNames();
+        $profiles = collect($profileNames)
+            ->map(fn($name) => $this->profileRepository->find($name) + ['name' => $name])
+            ->filter()
+            ->all();
+
+        return view('dashboard', compact('availableApis', 'prompts', 'customPromptKeys', 'profiles'));
     }
     /**
      * Retrieve prompts from storage or config.
@@ -58,7 +66,6 @@ final class DashboardController extends Controller
 
         $jsonPrompts = json_decode(file_get_contents($path), true) ?? [];
         return array_merge($defaultPrompts, $jsonPrompts);
-
     }
     /**
      * Display the dashboard with AI providers, models, and prompts.
@@ -148,8 +155,8 @@ final class DashboardController extends Controller
         if (file_exists($path)) {
             $jsonPrompts = json_decode(file_get_contents($path), true) ?? [];
         }
-         // Prevent creating a key that already exists in the custom prompts file.
-         if (array_key_exists($validated['key'], $jsonPrompts)) {
+        // Prevent creating a key that already exists in the custom prompts file.
+        if (array_key_exists($validated['key'], $jsonPrompts)) {
             return back()->withInput()->withErrors(['key' => 'A prompt with this key already exists.']);
         }
 
@@ -160,7 +167,7 @@ final class DashboardController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Prompt created successfully!');
     }
-     /**
+    /**
      * Display the prompt edit form.
      *
      * @param  string  $key

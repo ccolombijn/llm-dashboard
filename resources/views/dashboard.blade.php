@@ -51,10 +51,12 @@
         <x-dashboard.llm-apis :available-apis="$availableApis" />
         <!-- Available Prompts -->
         <x-dashboard.prompts :prompts="$prompts" :custom-prompt-keys="$customPromptKeys ?? []" />
+        <!-- Available Profiles -->
+        <x-dashboard.profiles :profiles="$profiles" />
     </div>
 
     <!-- Global Modals Container -->
-    
+
     <template x-teleport="body">
         <div>
             <x-dashboard.modals.config />

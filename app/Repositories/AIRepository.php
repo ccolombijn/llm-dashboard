@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Contracts\ProfileRepositoryInterface;
+
 use Anthropic\Client as AnthropicClient;
 use App\Services\PomlService;
 use App\Contracts\AIRepositoryInterface;
@@ -35,7 +37,8 @@ final class AIRepository implements AIRepositoryInterface
     private ?MistralClient $mistral = null;
 
     public function __construct(
-        private readonly Application $app
+        private readonly Application $app,
+        private readonly ProfileRepositoryInterface $profileRepository
     ) {}
 
     /**
@@ -43,22 +46,7 @@ final class AIRepository implements AIRepositoryInterface
      */
     public function getAvailableProfiles(): array
     {
-        $storage = Storage::disk('public');
-        $path = 'json/profiles';
-
-        if (! $storage->exists($path)) {
-            Log::warning("AI profiles directory not found: {$path}");
-
-            return [];
-        }
-
-        $files = $storage->files($path);
-
-        return collect($files)
-            ->filter(fn($file) => pathinfo($file, PATHINFO_EXTENSION) === 'json')
-            ->map(fn($file) => pathinfo($file, PATHINFO_FILENAME))
-            ->values()
-            ->all();
+        return $this->profileRepository->getProfileNames();
     }
 
     /**
@@ -538,21 +526,21 @@ final class AIRepository implements AIRepositoryInterface
         $profileName = $data['profile'] ?? config('ai.default_profile');
         $profileData = null;
         if ($profileName) {
-            $profileData = $this->loadProfile($profileName);
+            $profileData = $this->profileRepository->find($profileName);
         }
 
         $prompt = (string) ($data['prompt'] ?? '');
         $isPredefinedPrompt = array_key_exists($prompt, config('ai.prompts', []));
 
         /**
-        * Handle predefined prompts and POML templates
-        * @example
-        * prompt: "code_qa" <-- predefined prompt key; returns poml:ask
-        * input: "Your question about the code goes here."
-        * file_paths: ['path/to/your/codefile.php', 'path/to/another/file.js']
-        */
+         * Handle predefined prompts and POML templates
+         * @example
+         * prompt: "code_qa" <-- predefined prompt key; returns poml:ask
+         * input: "Your question about the code goes here."
+         * file_paths: ['path/to/your/codefile.php', 'path/to/another/file.js']
+         */
         // If the prompt is a key for a predefined prompt, get the full text.
-        
+
         if ($isPredefinedPrompt) {
             $promptTemplate = config('ai.prompts.' . $prompt);
             // Check if the prompt is a POML template reference
@@ -602,30 +590,6 @@ final class AIRepository implements AIRepositoryInterface
             'file_context' => $fileContext,
             'prompt' => $prompt,
         ];
-    }
-    /**
-     * Load AI profile from JSON file.
-     * @param string $profileName
-     */
-    private function loadProfile(string $profileName): ?array
-    {
-        // Sanitize profile name to prevent directory traversal
-        $profileName = basename($profileName);
-        $path = "json/profiles/{$profileName}.json";
-        $storage = Storage::disk('public');
-
-        if (! $storage->exists($path)) {
-            Log::warning("AI profile not found: {$path}");
-            return null;
-        }
-
-        try {
-            $content = $storage->get($path);
-            return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            Log::error("Failed to parse AI profile: {$path}", ['exception' => $e]);
-            return null;
-        }
     }
 
     // Sanitize and restrict path to storage/app/public

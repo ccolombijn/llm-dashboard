@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\AIRepositoryInterface;
 use App\Contracts\ContactRepositoryInterface;
+use App\Contracts\ProfileRepositoryInterface;
 use App\Contracts\FileManagerInterface;
 use App\Contracts\PageRepositoryInterface;
 use App\Contracts\ProjectRepositoryInterface;
@@ -19,6 +20,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
 use App\Repositories\JsonContactRepository;
+use App\Repositories\JsonProfileRepository;
 use App\Repositories\JsonPageRepository;
 use App\Repositories\JsonProjectRepository;
 
@@ -45,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
             $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
             $this->app->singleton(AIRepositoryInterface::class, AIRepository::class);
+            $this->app->singleton(ProfileRepositoryInterface::class, JsonProfileRepository::class);
 
             //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
         }

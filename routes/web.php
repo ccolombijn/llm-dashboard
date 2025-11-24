@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AIController;
+use App\Http\Controllers\ProfileController; // This line is now correct
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::post('/dashboard/api-key', [DashboardController::class, 'updateApiKey'])->name('dashboard.update-api-key');
@@ -14,6 +15,10 @@ Route::post('/prompts', [DashboardController::class, 'storePrompt'])->name('prom
 Route::get('/prompts/{key}/edit', [DashboardController::class, 'editPrompt'])->name('prompts.edit');
 Route::put('/prompts/{key}', [DashboardController::class, 'updatePrompt'])->name('prompts.update');
 Route::delete('/prompts/{key}', [DashboardController::class, 'destroyPrompt'])->name('prompts.destroy');
+
+Route::get('profiles/create', [ProfileController::class, 'create'])->name('profiles.create');
+Route::post('profiles', [ProfileController::class, 'store'])->name('profiles.store');
+
 
 Route::post('/ai-generate', [AIController::class, 'generate'])->name('ai.generate');
 Route::get('/ai-profiles', [AIController::class, 'getProfiles'])->name('ai.profiles');
