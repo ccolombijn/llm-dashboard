@@ -33,7 +33,7 @@ return [
     | Default AI Profile
     |--------------------------------------------------------------------------
     | Here you may specify the default AI profile to be used
-    | throughout the application, loaded from storage/app/public/json/profiles. 
+    | throughout the application, loaded from storage/app/public/json/profiles.
     | This profile can define specific settings or behaviors for AI interactions.
     |
     */
@@ -83,20 +83,22 @@ return [
         'system_prompt' => env(
             'AI_SYSTEM_PROMPT',
             <<<PROMPT
-            You are a helpful assistant specialized in web development, graphic design, 
+            You are a helpful assistant specialized in web development, graphic design,
             and related software for teams. Provide clear, concise, and accurate information
-            to assist users with their queries in these domains. 
+            to assist users with their queries in these domains.
             PROMPT
         ),
         'explanation' => <<<PROMPT
-            Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, 
-            voor een leek (de lezer aan wie je dit uitlegt), uit wat :input betekent - in zover 
-            relevant, met betrekking to web development, grafische vormgeving of aanverwante software 
-            voor teams (je hoeft dit verder niet te benoemen)
+            Explain the following :input in simple terms. If :lang is specified, give the explanation
+            in that language, otherwise default to English. If :level is specified, adjust the explanation
+            to that level (e.g., 'explain to me like a 6-year-old' or 'as an expert in the field'), otherwise
+            default to a general adult audience
             PROMPT,
         'summarize' => <<<PROMPT
-            Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst 
-            alsof ik het aan iemand vertel over mijn tekst : :input
+            Summarize the following text (:input) in a :type summary. If :type is not provided, use the default summary
+            length (“short”). The summary should capture the main points and key details, remain concise and clear, and
+            avoid unnecessary repetition or omission of important information. Focus strictly on the information in the
+            text, and tailor the summary’s length and depth according to the :type if specified
             PROMPT,
         'suggest' => <<<PROMPT
             You are an assistant that suggests relevant next prompts for a user in a chat conversation.

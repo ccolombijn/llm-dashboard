@@ -16,6 +16,7 @@
         "vite-plugin-static-copy": "^3.1.4"
     },
     "dependencies": {
-        "alpinejs": "^3.14.1"
+        "alpinejs": "^3.14.1",
+        "marked": "^17.0.1"
     }
 }

@@ -1,0 +1,12 @@
+//import { form } from "./form";
+import { imgSelect } from "./admin/imgSelect";
+import { table } from "./admin/table";
+import { upload } from "./admin/upload";
+import { page } from "./admin/page";
+import { initializeFilePreviews } from "./admin/preview";
+//form();
+imgSelect();
+table();
+upload();
+page();
+initializeFilePreviews();
