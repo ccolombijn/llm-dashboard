@@ -1,5 +1,5 @@
 import { marked } from 'marked';
-import loadingGifUrl from '../../../images/loading.gif';
+//import loadingGifUrl from '../../../images/loading.gif';
 type HistoryRole = 'user' | 'model';
 type DisplayRole = 'user' | 'ai';
 
@@ -9,11 +9,11 @@ interface ChatMessage {
 }
 
 const chatHistory: ChatMessage[] = [];
-const profiles = [];
+const profiles: string[] = [];
 /**
  * Get and populate profiles from backend
  * @todo populate profiles from backend
- * @returns 
+ * @returns
  */
 function populateProfiles(): void {
     const profileSelectEl = document.getElementById('profile-select') as HTMLSelectElement | null;
@@ -23,7 +23,7 @@ function populateProfiles(): void {
     }
     fetchProfilesFromBackend().then(data => {
         profiles.push(...data);
-        profiles.unshift('Default'); 
+        profiles.unshift('Default');
         appendProfilesToSelect(profileSelectEl, profiles);
     }).catch(error => {
         console.error('Error fetching profiles:', error);
@@ -31,8 +31,8 @@ function populateProfiles(): void {
 }
 /**
  * Append profiles to select element
- * @param profileSelectEl 
- * @param profiles 
+ * @param profileSelectEl
+ * @param profiles
  */
 function appendProfilesToSelect(profileSelectEl: HTMLSelectElement, profiles: string[]): void {
     profileSelectEl.innerHTML = '';
@@ -61,7 +61,7 @@ function fetchProfilesFromBackend(): Promise<string[]> {
         });
     });
 }
-      
+
 export function aiChat(): void {
     populateProfiles();
     fetchAndDisplaySuggestions();
@@ -93,13 +93,13 @@ export function aiChat(): void {
 /**
  * @todo display message implementation
  */
-function displayMessage(input: string, role: DisplayRole): HTMLElement { 
+function displayMessage(input: string, role: DisplayRole): HTMLElement {
     const element = createMessageElement(role);
     element.textContent = input;
-    return element; 
+    return element;
 }
 /**
- * 
+ *
  * @param role {DisplayRole}
  * @returns HTMLElement
  */
@@ -113,7 +113,7 @@ function createMessageElement(role: DisplayRole): HTMLElement {
     return element;
 }
 /**
- * 
+ *
  * @returns Promise<void>
  */
 async function sendPrompt(): Promise<void> {
@@ -123,7 +123,7 @@ async function sendPrompt(): Promise<void> {
         console.error("Input with ID 'user-input' not found.");
         return;
     }
-    
+
     const userInput = userInputEl.textContent?.trim() || '';
     const filePathInput = document.getElementById('file-path-input') as HTMLInputElement | null;
     const filePaths = filePathInput ? filePathInput.value.trim().split(',').map(p => p.trim()).filter(p => p) : [];
@@ -132,7 +132,7 @@ async function sendPrompt(): Promise<void> {
 
 
     if (!userInput && filePaths.length === 0) return;
-    
+
     // Display user message immediately
     let userMessage = userInput;
     if (filePaths.length > 0) {
@@ -157,7 +157,7 @@ async function sendPrompt(): Promise<void> {
 
     let fullResponse = '';
     const aiMessageElement = createMessageElement('ai'); // Create AI message element
-    aiMessageElement.innerHTML = `<img src="${loadingGifUrl}" width="35" /> <span>Wachten..</span>`;
+    aiMessageElement.innerHTML = `<span>Wachten..</span>`;
     if (chatContainer) {
         chatContainer.appendChild(aiMessageElement); // Append AI message placeholder
         chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
@@ -192,8 +192,8 @@ async function sendPrompt(): Promise<void> {
                 break;
             }
             const chunk = decoder.decode(value, { stream: true });
-            fullResponse += chunk; 
-            aiMessageElement.innerHTML = await marked.parse(fullResponse); 
+            fullResponse += chunk;
+            aiMessageElement.innerHTML = await marked.parse(fullResponse);
             if (chatContainer) {
                 chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom with each chunk
             }

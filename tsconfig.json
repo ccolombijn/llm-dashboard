@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+      "target": "ESNext", // Compile naar een moderne JavaScript-versie
+      "module": "ESNext", // Gebruik de moderne module syntax
+      "moduleResolution": "bundler", // De moderne standaard voor bundlers zoals Vite
+      "strict": false, // Dwingt strikte typering af (aanbevolen voor nieuwe TS-projecten)
+      "jsx": "preserve", // Behoud JSX als je een framework zoals React of Vue gebruikt
+      "allowJs": true, // Sta toe dat .js en .ts bestanden naast elkaar bestaan
+      "noEmit": true, // Laat Vite de bestanden compileren, niet de TypeScript-compiler zelf
+      "isolatedModules": true, // Zorgt voor compatibiliteit met Vite
+      "resolveJsonModule": true, // Maakt het importeren van JSON-bestanden mogelijk
+      "baseUrl": ".",
+      "paths": {
+        "@/*": [
+          "resources/*" // Maakt imports zoals '@/components/Button.ts' mogelijk
+        ]
+      },
+      "types": ["vite/client"]
+    },
+    "include": [
+        "resources/ts/**/*.ts",
+        "resources/ts/**/*.d.ts" // Zorg ervoor dat deze regel erbij staat
+  ]
+}

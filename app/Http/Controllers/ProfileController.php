@@ -25,18 +25,12 @@ class ProfileController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'system_prompt' => 'nullable|string',
         ]);
 
-        $name = Str::slug($request->input('name'));
-        $data = [
-            'system_prompt' => $request->input('system_prompt', ''),
-            'files' => [], // Default empty files array
-        ];
-
-        if ($this->profileRepository->create($name, $data)) {
+        if ($this->profileRepository->create($validated)) {
             return redirect()->route('dashboard')->with('success', 'Profile created successfully.');
         }
 

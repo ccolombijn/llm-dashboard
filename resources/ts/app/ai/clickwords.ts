@@ -1,5 +1,5 @@
 import { fetchStream } from '../fetchStream';
-import loadingGifUrl from '../../../images/loading.gif';
+//import loadingGifUrl from '../../../images/loading.gif';
 /**
  * Sends textContent of elements with .click-me with fetchStream to backend
  * @returns {void}
@@ -18,7 +18,7 @@ export function aiClickwords(): void {
             const textContent = word.textContent?.trim();
             if (textContent) {
                 word.addEventListener('click', () => {
-                    explanationElement.innerHTML = `<img src="${loadingGifUrl}" width="35" /> <span>Wachten..</span>`;
+                    explanationElement.innerHTML = ` <span>Wachten..</span>`;
                     fetchStream(
                         {
                             prompt: 'explanation',

@@ -1,5 +1,5 @@
 import { fetchStream } from "../fetchStream";
-import loadingGifUrl from '../../../images/loading.gif';
+//import loadingGifUrl from '../../../images/loading.gif';
 /**
  * Summarize page with AI
  * @returns {void}
@@ -12,13 +12,13 @@ export function aiSummarize(): void {
 
     if (!contentElement || !summarizeElement || !summarizeButton) {
         console.warn("ai/summarize : one or more (.content, #ai-summarize, .summarize-btn) not found. Aborted");
-        return; 
+        return;
     }
 
     const pageContent = contentElement.textContent?.trim() || '';
 
     summarizeButton.addEventListener('click', () => {
-        summarizeElement.innerHTML = `<img src="${loadingGifUrl}" width="35" /> <span>Wachten..</span>`;
+        summarizeElement.innerHTML = ` <span>Wachten..</span>`;
         fetchStream(
             {
                 prompt: 'summarize',

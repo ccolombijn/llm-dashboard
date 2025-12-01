@@ -20,8 +20,8 @@
                     ? 'dark'
                     : 'light');
         </script>
-        {{-- Add the Vite directive --}}
-        @vite(['resources/js/app.js','resources/css/app.css'])
+        {{-- The path for app.ts must match vite.config.js --}}
+        @vite(['resources/ts/app.ts','resources/css/app.css'])
     </head>
     @php
     $pageData = null;

@@ -26,7 +26,7 @@ interface ProfileRepositoryInterface
      * @param array $data
      * @return bool
      */
-    public function create(string $name, array $data): bool;
+    public function create(array $data): bool;
 
     /**
      * Delete a profile by its name.

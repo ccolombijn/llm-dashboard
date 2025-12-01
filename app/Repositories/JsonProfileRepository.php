@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Contracts\ProfileRepositoryInterface;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class JsonProfileRepository implements ProfileRepositoryInterface
 {
@@ -69,10 +70,10 @@ class JsonProfileRepository implements ProfileRepositoryInterface
      * @param array $data
      * @return bool
      */
-    public function create(string $name, array $data): bool
+    public function create(array $data): bool
     {
-        $name = basename($name);
-        $filePath = "{$this->path}/{$name}.json";
+        $name = $data['name'];
+        $filePath = "{$this->path}/" . Str::slug($name) . ".json";
 
         try {
             $jsonContent = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
