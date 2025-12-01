@@ -7,7 +7,7 @@
         </h1>
 
         <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <form action="{{ route('profiles.update', $profile['name']) }}" method="POST" class="space-y-6">
+            <form action="{{ route('profiles.update', $profile['name']) }}" method="POST" class="space-y-6" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -27,6 +27,19 @@
                               class="mt-1 block w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
                               placeholder="You are a helpful assistant. Summarize the following content...">{{ old('system_prompt', $profile['system_prompt']) }}</textarea>
                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">The main prompt or instruction for the AI model.</p>
+                </div>
+
+                {{-- Upload New Context Files --}}
+                <div>
+                    <label for="new_files" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Upload New Context Files</label>
+                    <input type="file" name="new_files[]" id="new_files" multiple
+                           class="mt-1 block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700 focus:outline-none
+                                  file:mr-4 file:py-2 file:px-4
+                                  file:rounded-l-md file:border-0
+                                  file:text-sm file:font-semibold
+                                  file:bg-gray-50 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200
+                                  hover:file:bg-gray-100 dark:hover:file:bg-gray-600">
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Upload new files to make them available for context selection.</p>
                 </div>
 
                 {{-- Context Files --}}

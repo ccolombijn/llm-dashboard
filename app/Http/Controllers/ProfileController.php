@@ -87,8 +87,16 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'system_prompt' => 'nullable|string',
             'files' => 'nullable|array',
-            'files.*' => 'string',
+            'files.*' => 'string', // Existing files
+            'new_files' => 'nullable|array',
+            'new_files.*' => 'file', // New uploaded files
         ]);
+
+        // Handle new file uploads
+        if ($request->hasFile('new_files')) {
+            $contextFilesDir = config('ai.default_files_directory');
+            $this->fileManager->store($contextFilesDir, $request->file('new_files'));
+        }
 
         if ($this->profileRepository->update($filename, $validated)) {
             return redirect()->route('dashboard')->with('success', 'Profile updated successfully.');

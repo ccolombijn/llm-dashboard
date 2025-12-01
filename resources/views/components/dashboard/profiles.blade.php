@@ -19,8 +19,8 @@
                     @endif
                 </div>
                 <div class="flex items-center space-x-2">
-                  <a href="{{ route('profiles.edit', ['profile' => $profile['name']]) }}" class="text-gray-500 py-1 px-3 rounded-md hover:bg-gray-600 text-sm font-semibold"><i class="fa-solid fa-pen"></i></a>
-                    <form action="{{ route('profiles.destroy', ['profile' => $profile['name']]) }}" method="POST" id="delete-profile-form-{{ $loop->index }}">
+                  <a href="{{ route('profiles.edit', ['profile' => strtolower($profile['name'])]) }}" class="text-gray-500 py-1 px-3 rounded-md hover:bg-gray-600 text-sm font-semibold"><i class="fa-solid fa-pen"></i></a>
+                    <form action="{{ route('profiles.destroy', ['profile' => strtolower($profile['name'])]) }}" method="POST" id="delete-profile-form-{{ $loop->index }}">
                         @csrf
                         @method('DELETE')
                     </form>
