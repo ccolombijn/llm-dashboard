@@ -12,6 +12,8 @@ export default function dashboard(
         activeModal: null,
         modalProvider: '',
         promptToDeleteKey: '',
+        profileToDeleteName: '',
+        formToDeleteId: '',
         providerToDeleteKey: '',
         testPrompt: 'Write a short haiku about a robot.',
         testInput: '',
@@ -184,6 +186,13 @@ export default function dashboard(
             this.providerToDeleteKey = provider;
             this.activeModal = 'deleteApiKey';
             console.log('Opening delete API key modal for provider:', provider, this.activeModal);
+        },
+
+        openDeleteProfileModal(this: DashboardState, formId: string, profileName: string) {
+            console.log('Opening delete profile modal for profile:', profileName, formId);
+            this.formToDeleteId = formId;
+            this.profileToDeleteName = profileName;
+            this.activeModal = 'deleteProfile';
         },
 
 

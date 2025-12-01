@@ -19,9 +19,17 @@
                     @endif
                 </div>
                 <div class="flex items-center space-x-2">
-                    {{-- <a href="#" class="text-blue-500 hover:text-blue-700">Edit</a>
-                    <button @click="openDeleteModal('{{ $profile['name'] }}')" class="text-red-500 hover:text-red-700">Delete</button> --}}
+                  <a href="{{ route('profiles.edit', ['profile' => $profile['name']]) }}" class="text-gray-500 py-1 px-3 rounded-md hover:bg-gray-600 text-sm font-semibold"><i class="fa-solid fa-pen"></i></a>
+                    <form action="{{ route('profiles.destroy', ['profile' => $profile['name']]) }}" method="POST" id="delete-profile-form-{{ $loop->index }}">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    <button type="button"
+                            class="text-gray-500 py-1 px-3 rounded-md hover:bg-gray-700 text-sm font-semibold"
+                            @click="openDeleteProfileModal('delete-profile-form-{{ $loop->index }}', '{{ addslashes($profile['name']) }}')">
+                        <i class="fa-solid fa-trash-can"></i></button>
                 </div>
+
             </div>
         @empty
             <p class="text-gray-500 dark:text-gray-400">No custom profiles found.</p>

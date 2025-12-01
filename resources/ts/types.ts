@@ -49,6 +49,8 @@ export interface DashboardState {
     theme: string;
     themeSwitcherOpen: boolean;
     readonly providerDefaultModel: string | null;
+    profileToDeleteName: string;
+    formToDeleteId: string;
     isDefaultProvider(provider: string): boolean;
     getDefaultModelName(): string;
     init(): void;
@@ -64,4 +66,5 @@ export interface DashboardState {
     updateDefaultHandler(): Promise<void>;
     fetchAllModels(): Promise<void>;
     fetchModelsIfNeeded(provider: string): Promise<void>;
+    openDeleteProfileModal(formId: string, profileName: string): void;
 }

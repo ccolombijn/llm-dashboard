@@ -72,16 +72,48 @@ class JsonProfileRepository implements ProfileRepositoryInterface
      */
     public function create(array $data): bool
     {
-        $name = $data['name'];
-        $filePath = "{$this->path}/" . Str::slug($name) . ".json";
+        $slug = Str::slug($data['name']);
+        $filePath = "{$this->path}/{$slug}.json";
+
+        // Add the slug as a persistent ID to the data
+        $data['id'] = $slug;
 
         try {
+            // Ensure files key exists to avoid errors on new profiles
+            $data['files'] = $data['files'] ?? [];
             $jsonContent = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
             return Storage::disk($this->disk)->put($filePath, $jsonContent);
         } catch (\JsonException $e) {
-            Log::error("Failed to encode profile data for: {$name}", ['exception' => $e]);
+            Log::error("Failed to encode profile data for: {$data['name']}", ['exception' => $e]);
             return false;
         }
+    }
+
+    /**
+     * Update a profile by its name.
+     *
+     * @param string $id The original ID (slug) of the profile.
+     * @param array $data
+     * @return bool
+     */
+    public function update(string $id, array $data): bool
+    {
+        $originalProfile = $this->find($id);
+        if (!$originalProfile) {
+            return false;
+        }
+
+        $newSlug = Str::slug($data['name']);
+
+        // If the name has changed, the slug will be different.
+        // We need to delete the old file.
+        if ($id !== $newSlug) {
+            $this->delete($id);
+        }
+
+        // The create method will handle saving the file with the correct new or old slug.
+        // It also correctly sets the 'id' field in the JSON.
+        return $this->create($data);
     }
 
     /**
@@ -93,9 +125,8 @@ class JsonProfileRepository implements ProfileRepositoryInterface
     public function delete(string $name): bool
     {
         $name = basename($name);
-        $filePath = "{$this->path}/{$name}.json";
+        $filePath = "{$this->path}/" . strtolower($name) . ".json";
         $storage = Storage::disk($this->disk);
-
         return $storage->delete($filePath);
     }
 }

@@ -27,7 +27,7 @@ return [
     |
     */
     'default_files' => array_filter(explode(',', env('AI_DEFAULT_FILES', ''))),
-
+    'default_files_directory' => env('AI_DEFAULT_FILES_DIRECTORY', 'context'),
     /*
     |--------------------------------------------------------------------------
     | Default AI Profile

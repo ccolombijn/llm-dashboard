@@ -23,6 +23,7 @@ use App\Repositories\JsonContactRepository;
 use App\Repositories\JsonProfileRepository;
 use App\Repositories\JsonPageRepository;
 use App\Repositories\JsonProjectRepository;
+use App\Repositories\StorageFileManagerRepository;
 
 use Illuminate\Support\Facades\Storage;
 
@@ -48,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
             $this->app->singleton(AIRepositoryInterface::class, AIRepository::class);
             $this->app->singleton(ProfileRepositoryInterface::class, JsonProfileRepository::class);
+            $this->app->singleton(FileManagerInterface::class, StorageFileManagerRepository::class);
 
             //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
         }

@@ -63,6 +63,7 @@
             <x-dashboard.modals.change-model />
             <x-dashboard.modals.test />
             <x-dashboard.modals.delete-prompt />
+            <x-dashboard.modals.delete-profile />
             <x-dashboard.modals.delete-api-key />
         </div>
     </template>

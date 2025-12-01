@@ -42,14 +42,23 @@
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Existing Profiles</h3>
                         <div class="space-y-4">
                             @forelse ($profiles as $profile)
-                                <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                    <h4 class="font-semibold text-gray-800 dark:text-gray-200">{{ $profile['name'] }}</h4>
-                                    @if(!empty($profile['system_prompt']))
-                                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                            <strong>System Prompt:</strong> {{ Str::limit($profile['system_prompt'], 150) }}
-                                        </p>
-                                    @endif
-                                    {{-- TODO: Add edit and delete buttons --}}
+                                <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 dark:text-gray-200">{{ $profile['name'] }}</h4>
+                                        @if(!empty($profile['system_prompt']))
+                                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                                <strong>System Prompt:</strong> {{ Str::limit($profile['system_prompt'], 150) }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="flex space-x-4 flex-shrink-0 ml-4">
+                                        <a href="{{ route('profiles.edit', $profile['id']) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Edit</a>
+                                        <form action="{{ route('profiles.destroy', $profile['id']) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this profile?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-500">Delete</button>
+                                        </form>
+                                    </div>
                                 </div>
                             @empty
                                 <p class="text-gray-500 dark:text-gray-400">No profiles found.</p>

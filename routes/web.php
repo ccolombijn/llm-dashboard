@@ -16,8 +16,8 @@ Route::get('/prompts/{key}/edit', [DashboardController::class, 'editPrompt'])->n
 Route::put('/prompts/{key}', [DashboardController::class, 'updatePrompt'])->name('prompts.update');
 Route::delete('/prompts/{key}', [DashboardController::class, 'destroyPrompt'])->name('prompts.destroy');
 
-Route::get('profiles/create', [ProfileController::class, 'create'])->name('profiles.create');
-Route::post('profiles', [ProfileController::class, 'store'])->name('profiles.store');
+Route::resource('profiles', ProfileController::class)->except(['index', 'show']);
+
 
 
 Route::post('/ai-generate', [AIController::class, 'generate'])->name('ai.generate');

@@ -35,4 +35,13 @@ interface ProfileRepositoryInterface
      * @return bool
      */
     public function delete(string $name): bool;
+
+    /**
+     * Update an existing profile.
+     *
+     * @param string $name
+     * @param array $data
+     * @return bool
+     */
+    public function update(string $name, array $data): bool;
 }

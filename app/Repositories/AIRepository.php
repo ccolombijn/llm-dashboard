@@ -77,7 +77,7 @@ final class AIRepository implements AIRepositoryInterface
                 ->map(fn($model) => ['id' => $model->id, 'owned_by' => $model->ownedBy])
                 ->sortBy('id')->values()->all();
         } catch (Throwable $e) {
-            Log::error('Failed to retrieve models from OpenAI.', ['exception' => $e]);
+            //Log::error('Failed to retrieve models from OpenAI.', ['exception' => $e]);
             $allModels['openai'] = [];
         }
 
@@ -88,7 +88,7 @@ final class AIRepository implements AIRepositoryInterface
                 ->map(fn($model) => ['id' => $model->name, 'display_name' => $model->displayName])
                 ->sortBy('id')->values()->all();
         } catch (Throwable $e) {
-            Log::error('Failed to retrieve models from Gemini.', ['exception' => $e]);
+            //Log::error('Failed to retrieve models from Gemini.', ['exception' => $e]);
             $allModels['gemini'] = [];
         }
 
@@ -98,7 +98,7 @@ final class AIRepository implements AIRepositoryInterface
             $modelListDto = $response->dtoOrFail();
             $allModels['mistral'] = collect($modelListDto->data)->sortBy('id')->values()->all();
         } catch (Throwable $e) {
-            Log::error('Failed to retrieve models from Mistral.', ['exception' => $e]);
+            //Log::error('Failed to retrieve models from Mistral.', ['exception' => $e]);
             $allModels['mistral'] = [];
         }
 
@@ -115,7 +115,7 @@ final class AIRepository implements AIRepositoryInterface
 
             $allModels['anthropic'] = $response->json('data', []);
         } catch (Throwable $e) {
-            Log::error('Failed to retrieve models from Anthropic.', ['exception' => $e]);
+            //Log::error('Failed to retrieve models from Anthropic.', ['exception' => $e]);
             $allModels['anthropic'] = [];
         }
 
