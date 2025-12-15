@@ -1,6 +1,7 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
 import dashboard from './dashboard';
+import promptConverter from './prompts';
 
 import { aiClickwords } from "./app/ai/clickwords";
 import { aiSummarize } from "./app/ai/summarize";
@@ -15,4 +16,5 @@ form();
 navResponsive();
 window.Alpine = Alpine;
 Alpine.data('dashboard', dashboard);
+Alpine.data('promptConverter', promptConverter);
 Alpine.start();

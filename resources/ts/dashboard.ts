@@ -1,5 +1,5 @@
-import { DashboardState, TestResponseDetails, AvailableModels } from './types';
-import { AlpineComponent, Refs } from "alpinejs";
+import { DashboardState, AvailableModels } from './types';
+import { AlpineComponent } from "alpinejs";
 
 export default function dashboard(
     updateHandlerUrl: string,

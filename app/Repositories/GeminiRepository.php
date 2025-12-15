@@ -46,7 +46,7 @@ final class GeminiRepository implements ProviderRepositoryInterface
     public function generate(array $data): JsonResponse|StreamedResponse
     {
         try {
-            $model = $data['model'] ?? config('ai.models.gemini', 'gemini-1.5-flash');
+            $model = $data['model'] ?? config('ai.models.gemini', 'gemini-2.5-flash');
             $prompt = $this->buildGeminiPrompt($data);
 
             if (! empty($data['stream'])) {
@@ -63,6 +63,7 @@ final class GeminiRepository implements ProviderRepositoryInterface
             }
 
             $response = $modelInstance->generateContent($prompt);
+            Log::debug('Gemini: Received response.', ['response' => $response->toArray()]);
 
             return response()->json([
                 'response' => $response->text(),
