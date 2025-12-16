@@ -6,10 +6,14 @@ export default function promptConverter(initialValue: string = '') {
         highlightedCode: '',
         copyButtonText: 'Copy',
         isLoading: false,
+        stats: { size: 0, tokens: 0 },
+        cachedConversions: {} as Record<string, { content: string, size: number, tokens: number }>,
+        cacheSource: initialValue,
 
         init() {
             this.rawPrompt = initialValue;
             this.displayPrompt = initialValue;
+            this.cacheSource = initialValue;
         },
 
         switchTab(tab: string) {
@@ -18,10 +22,26 @@ export default function promptConverter(initialValue: string = '') {
             this.convertContent();
         },
 
-        async convertContent() {
+        async convertContent(force: boolean = false) {
             if (this.activeTab === 'raw') {
                 this.displayPrompt = this.rawPrompt;
+                this.stats = { size: 0, tokens: 0 };
                 return;
+            }
+
+            // Check cache if not forced and source hasn't changed
+            if (!force && this.cachedConversions[this.activeTab] && this.rawPrompt === this.cacheSource) {
+                const cached = this.cachedConversions[this.activeTab];
+                this.displayPrompt = cached.content;
+                this.stats = { size: cached.size, tokens: cached.tokens };
+                this.updateHighlighting();
+                return;
+            }
+
+            // If source changed, invalidate cache
+            if (this.rawPrompt !== this.cacheSource) {
+                this.cachedConversions = {};
+                this.cacheSource = this.rawPrompt;
             }
 
             this.isLoading = true;
@@ -80,7 +100,19 @@ ${this.rawPrompt}`;
 
                 const data = await response.json();
                 console.log(data);
-                this.displayPrompt = data.response;
+
+                let content = data.response;
+                // Extract content from markdown code blocks if present
+                const codeBlockMatch = content.match(/```(?:[\w-]*\s+)?([\s\S]*?)```/);
+                if (codeBlockMatch) {
+                    content = codeBlockMatch[1].trim();
+                }
+                this.displayPrompt = content;
+
+                const size = content.length;
+                const tokens = data.tokens || (data.usage ? data.usage.completion_tokens : 0);
+                this.stats = { size, tokens };
+                this.cachedConversions[this.activeTab] = { content, size, tokens };
                 this.updateHighlighting();
             } catch (error) {
                 console.error(error);

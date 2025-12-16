@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <div class="container mx-auto p-4">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">
             Edit Profile: {{ $profile['name'] }}
@@ -21,13 +24,15 @@
                 </div>
 
                 {{-- Prompt --}}
-                <div>
-                    <label for="system_prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt</label>
-                    <textarea name="system_prompt" id="system_prompt" rows="8" required
-                              class="mt-1 block w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
-                              placeholder="You are a helpful assistant. Summarize the following content...">{{ old('system_prompt', $profile['system_prompt']) }}</textarea>
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">The main prompt or instruction for the AI model.</p>
-                </div>
+                <x-prompt-editor
+                    name="system_prompt"
+                    label="Prompt"
+                    :value="old('system_prompt', $profile['system_prompt'])"
+                    placeholder="You are a helpful assistant. Summarize the following content..."
+                    help-text="The main prompt or instruction for the AI model."
+                    required
+                    rows="8"
+                />
 
                 {{-- Upload New Context Files --}}
                 <div>
