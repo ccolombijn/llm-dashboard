@@ -26,6 +26,8 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Gemini\Laravel\Facades\Gemini;
+use Gemini\Responses\GenerativeModel\CountTokensResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -274,5 +276,17 @@ final class GeminiRepository implements ProviderRepositoryInterface
             $this->gemini = $this->app->make(GeminiClient::class);
         }
         return $this->gemini;
+    }
+    /**
+     * Get the token count for a given prompt.
+     *
+     * @param array $data
+     * @return int
+     */
+    private function getTokens(array $data): int
+    {
+        $model = $data['model'] ?? config('ai.models.gemini', 'gemini-2.5-flash');
+        $response = Gemini::generativeModel(model: $model)->countTokens($data['prompt']);
+        return $response->totalTokens;;
     }
 }

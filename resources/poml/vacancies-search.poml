@@ -100,6 +100,11 @@
         <action_if_match>VERWIJDER VACATURE (Geen directe link)</action_if_match>
       </filter>
 
+      <filter name="Google Link Check">
+        <check>Bevat de URL een Google redirect (bijv. 'https://www.google.com/url?q=')?</check>
+        <action_if_match>VERWIJDER VACATURE (Google redirect)</action_if_match>
+      </filter>
+
       <filter name="Rule_Check">
         <check>Voldoet de vacature aan alle gedragsregels ({{No_Creativity}}, {{No_Filler}}, {{Strict_Filtering}}, {{Direct_Links_Only}})?</check>
         <action_if_match>VERWIJDER VACATURE van de agent </action_if_match>

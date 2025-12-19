@@ -91,4 +91,19 @@ final class MistralRepository implements ProviderRepositoryInterface
         }
         return $this->mistral;
     }
+
+    private function getTokens(array $data): int
+    {
+        //$model = $data['model'] ?? config('ai.models.mistral', 'mistral-large-latest');
+        //return TokenizerX::count($data['prompt'], $model);
+        // Calculate the number of words in the prompt
+        // str_word_count is a standard way to count words in English text
+        $wordCount = str_word_count($data['prompt']);
+
+        // Apply the conversion factor (1000 / 750 = 1.3333...)
+        $estimatedTokens = $wordCount * (1000 / 750);
+
+        // Return the result rounded up to the nearest integer
+        return (int) ceil($estimatedTokens);
+    }
 }

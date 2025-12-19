@@ -137,4 +137,14 @@ final class AnthropicRepository implements ProviderRepositoryInterface
         $mergedMessages[] = $lastMessage;
         return $mergedMessages;
     }
+    /**
+     * Calculate the number of tokens in the given data.
+     */
+
+    private function getTokens(array $data): int
+    {
+        $wordCount = str_word_count($data['prompt']);
+        $estimatedTokens = $wordCount * (1000 / 750);
+        return (int) ceil($estimatedTokens);
+    }
 }

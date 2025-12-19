@@ -25,8 +25,6 @@ export default function promptConverter(initialValue: string = '') {
         async convertContent(force: boolean = false) {
             if (this.activeTab === 'raw') {
                 this.displayPrompt = this.rawPrompt;
-                this.stats = { size: 0, tokens: 0 };
-                return;
             }
 
             // Check cache if not forced and source hasn't changed
@@ -49,7 +47,9 @@ export default function promptConverter(initialValue: string = '') {
 
             try {
                 let prompt = '';
-                if (this.activeTab === 'toon') {
+                if (this.activeTab === 'raw') {
+                    prompt = this.rawPrompt;
+                } else if (this.activeTab === 'toon') {
                     prompt = `Convert the following prompt content into Token-Oriented Object Notation (TOON).
 TOON is a compact format designed to minimize tokens.
 
@@ -99,18 +99,24 @@ ${this.rawPrompt}`;
                 if (!response.ok) throw new Error('Conversion failed');
 
                 const data = await response.json();
-                console.log(data);
 
-                let content = data.response;
-                // Extract content from markdown code blocks if present
-                const codeBlockMatch = content.match(/```(?:[\w-]*\s+)?([\s\S]*?)```/);
-                if (codeBlockMatch) {
-                    content = codeBlockMatch[1].trim();
+                let content = '';
+                let tokens = 0;
+
+                if (this.activeTab === 'raw') {
+                    content = this.rawPrompt;
+                    tokens = data.tokens_in || (data.usage ? data.usage.prompt_tokens : 0);
+                } else {
+                    content = data.response;
+                    const codeBlockMatch = content.match(/```(?:[\w-]*\s+)?([\s\S]*?)```/);
+                    if (codeBlockMatch) {
+                        content = codeBlockMatch[1].trim();
+                    }
+                    tokens = data.tokens_out || data.tokens || (data.usage ? data.usage.completion_tokens : 0);
                 }
                 this.displayPrompt = content;
 
                 const size = content.length;
-                const tokens = data.tokens || (data.usage ? data.usage.completion_tokens : 0);
                 this.stats = { size, tokens };
                 this.cachedConversions[this.activeTab] = { content, size, tokens };
                 this.updateHighlighting();
@@ -127,6 +133,7 @@ ${this.rawPrompt}`;
             // Only update the raw source if we are in raw mode to preserve the original text
             if (this.activeTab === 'raw') {
                 this.rawPrompt = value;
+                this.stats = { size: value.length, tokens: 0 };
             }
         },
 

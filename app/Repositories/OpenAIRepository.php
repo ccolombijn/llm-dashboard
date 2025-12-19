@@ -10,6 +10,7 @@ use App\Traits\HandlesResponses;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use OpenAI\Client as OpenAIClient;
+use Rajentrivedi\TokenizerX\TokenizerX;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -115,5 +116,13 @@ final class OpenAIRepository implements ProviderRepositoryInterface
         }
 
         return $this->openai;
+    }
+    /**
+     * Calculate the number of tokens in the given data.
+     */
+    private function getTokens(array $data): int
+    {
+        $model = $data['model'] ?? config('ai.models.openai', 'gpt-4-turbo');
+        return TokenizerX::count($data['prompt'], $model);
     }
 }

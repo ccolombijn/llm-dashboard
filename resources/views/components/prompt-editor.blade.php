@@ -41,14 +41,18 @@
     </div>
 
     <label for="{{ $name }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
-    <textarea name="{{ $name }}" id="{{ $name }}"
-              x-show="activeTab === 'raw'"
-              x-model="displayPrompt"
-              @input="updatePrompt($event.target.value)"
-              {{ $attributes->except('class') }}
-              class="mt-1 block w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"></textarea>
 
-    <div class="relative" x-show="activeTab !== 'raw'">
+    <div class="relative mt-1">
+        <textarea name="{{ $name }}" id="{{ $name }}"
+                  x-show="activeTab === 'raw'"
+                  x-model="displayPrompt"
+                  @input="updatePrompt($event.target.value)"
+                  {{ $attributes->except('class') }}
+                  class="block w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"></textarea>
+
+        <pre x-show="activeTab !== 'raw'"
+             class="block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm overflow-auto h-64 dark:bg-gray-900 dark:border-gray-600 whitespace-pre-wrap"><code class="text-sm bg-transparent hljs" x-html="highlightedCode"></code></pre>
+
         <div class="absolute top-2 right-2 flex items-center space-x-2 z-10">
             <div class="text-xs text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80 px-2 py-1 rounded backdrop-blur-sm border border-gray-200 dark:border-gray-700" x-show="stats.size > 0">
                 <span x-text="stats.size + ' chars'"></span>
@@ -66,7 +70,6 @@
                     x-text="copyButtonText">
             </button>
         </div>
-        <pre class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm overflow-auto h-64 dark:bg-gray-900 dark:border-gray-600 whitespace-pre-wrap"><code class="text-sm bg-transparent hljs" x-html="highlightedCode"></code></pre>
     </div>
 
     @if($helpText)
