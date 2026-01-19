@@ -63,14 +63,8 @@ class ProfileController extends Controller
             return redirect()->route('dashboard')->with('error', 'Profile not found.');
         }
 
-        //dd($profile); // Add this line to inspect the $profile variable
-        // Get the directory for context files from the config.
         $contextFilesDir = config('ai.default_files_directory');
-
-        // Get all contents from the directory using the existing method.
         $allContents = $this->fileManager->listContents($contextFilesDir);
-
-        // Filter the contents to get only files and extract their paths.
         $files = collect($allContents)
             ->where('type', 'file')
             ->pluck('path');

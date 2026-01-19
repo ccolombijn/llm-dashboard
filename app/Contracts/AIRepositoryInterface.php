@@ -14,4 +14,5 @@ interface AIRepositoryInterface
     public function getAvailableModels(): array;
     public function generate(array $data, ?string $provider = null): JsonResponse|StreamedResponse;
     public function suggestPrompts(array $data): array;
+    public function chat(string $provider, array $messages): array;
 }

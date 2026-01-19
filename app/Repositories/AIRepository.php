@@ -10,6 +10,8 @@ use App\Contracts\ProviderRepositoryInterface;
 use Anthropic\Client as AnthropicClient;
 use App\Traits\BuildsPrompts;
 use Illuminate\Contracts\Foundation\Application;
+use Gemini\Data\Content;
+use Gemini\Data\Part;
 use App\Traits\FilePathResolver;
 use Gemini\Client as GeminiClient;
 use HelgeSverre\Mistral\Mistral as MistralClient;
@@ -160,5 +162,97 @@ final class AIRepository implements AIRepositoryInterface
         };
 
         return $this->app->make($repositoryClass);
+    }
+
+    public function chat(string $provider, array $messages): array
+    {
+        try {
+            return match ($provider) {
+                'openai' => $this->chatOpenAI($messages),
+                'anthropic' => $this->chatAnthropic($messages),
+                'gemini' => $this->chatGemini($messages),
+                'mistral' => $this->chatMistral($messages),
+                default => throw new InvalidArgumentException("Provider [{$provider}] not supported for chat."),
+            };
+        } catch (Throwable $e) {
+            Log::error("Chat generation failed for provider {$provider}", ['exception' => $e]);
+            return ['role' => 'assistant', 'content' => "Error: " . $e->getMessage()];
+        }
+    }
+
+    private function chatOpenAI(array $messages): array
+    {
+        $client = \OpenAI::client(config('openai.api_key'));
+        $response = $client->chat()->create([
+            'model' => config('ai.models.openai', 'gpt-4o'),
+            'messages' => $messages,
+        ]);
+
+        return ['role' => 'assistant', 'content' => $response->choices[0]->message->content];
+    }
+
+    private function chatAnthropic(array $messages): array
+    {
+        $client = \Anthropic::client(config('services.anthropic.api_key'));
+
+        $system = '';
+        $filteredMessages = [];
+        foreach ($messages as $msg) {
+            if ($msg['role'] === 'system') {
+                $system .= $msg['content'] . "\n";
+            } else {
+                $filteredMessages[] = ['role' => $msg['role'], 'content' => $msg['content']];
+            }
+        }
+
+        $response = $client->messages()->create([
+            'model' => config('ai.models.anthropic', 'claude-3-5-sonnet-20240620'),
+            'max_tokens' => 4096,
+            'system' => trim($system),
+            'messages' => $filteredMessages,
+        ]);
+
+        return ['role' => 'assistant', 'content' => $response->content[0]->text];
+    }
+
+    private function chatGemini(array $messages): array
+    {
+        $client = \Gemini::client(config('gemini.api_key'));
+        $model = $client->generativeModel(config('ai.models.gemini', 'gemini-1.5-flash'));
+
+        $systemInstruction = null;
+        $history = [];
+
+        // Extract the last message to use as the new user prompt
+        $lastMessage = array_pop($messages);
+
+        foreach ($messages as $msg) {
+            if ($msg['role'] === 'system') {
+                $systemInstruction = $msg['content'];
+            } else {
+                $role = $msg['role'] === 'user' ? 'user' : 'model';
+                $history[] = ['role' => $role, 'parts' => [['text' => $msg['content']]]];
+            }
+        }
+
+        if ($systemInstruction) {
+            $model = $model->withSystemInstruction(new Content(parts: [new Part(text: $systemInstruction)]));
+        }
+
+        $chat = $model->startChat(history: $history);
+        $response = $chat->sendMessage($lastMessage['content']);
+
+        return ['role' => 'assistant', 'content' => $response->text()];
+    }
+
+    private function chatMistral(array $messages): array
+    {
+        $client = new MistralClient(config('mistral.api_key'));
+        $response = $client->chat()->create([
+            'model' => config('ai.models.mistral', 'mistral-small-latest'),
+            'messages' => $messages,
+        ]);
+
+        return ['role' => 'assistant', 'content' => $response['choices'][0]['message']['content']];
     }
 }

@@ -39,6 +39,7 @@
 
             <div class="flex justify-end space-x-3">
                 <a href="{{ route('dashboard') }}" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 font-semibold dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</a>
+                <button type="submit" name="action" value="test" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 font-semibold">Update & Test</button>
                 <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-semibold">Update Prompt</button>
             </div>
         </form>

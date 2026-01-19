@@ -8,6 +8,7 @@ use App\Services\DotEnvService;
 use App\Contracts\AIRepositoryInterface;
 use App\Contracts\ProfileRepositoryInterface;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\File;
@@ -165,6 +166,10 @@ final class DashboardController extends Controller
         File::ensureDirectoryExists(dirname($path));
         file_put_contents($path, json_encode($jsonPrompts, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
+        if ($request->input('action') === 'test') {
+            return redirect()->route('prompts.test', ['key' => $validated['key']])->with('success', 'Prompt created successfully! Ready for testing.');
+        }
+
         return redirect()->route('dashboard')->with('success', 'Prompt created successfully!');
     }
     /**
@@ -185,6 +190,29 @@ final class DashboardController extends Controller
             'key' => $key,
             'prompt' => $prompts[$key],
         ]);
+    }
+    /**
+     * Display the prompt testing interface.
+     *
+     * @param  string  $key
+     * @return View
+     */
+    public function testPrompt(string $key): View
+    {
+        $prompts = $this->getPrompts();
+
+        if (! array_key_exists($key, $prompts)) {
+            abort(404);
+        }
+
+        $availableApis = [
+            'openai' => $this->aiRepository->isProviderConfigured('openai'),
+            'gemini' => $this->aiRepository->isProviderConfigured('gemini'),
+            'anthropic' => $this->aiRepository->isProviderConfigured('anthropic'),
+            'mistral' => $this->aiRepository->isProviderConfigured('mistral'),
+        ];
+
+        return view('prompts.test', ['key' => $key, 'prompt' => $prompts[$key], 'availableApis' => $availableApis]);
     }
 
     /**
@@ -208,6 +236,10 @@ final class DashboardController extends Controller
 
         File::ensureDirectoryExists(dirname($path));
         file_put_contents($path, json_encode($jsonPrompts, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        if ($request->input('action') === 'test') {
+            return redirect()->route('prompts.test', ['key' => $key])->with('success', 'Prompt updated successfully! Ready for testing.');
+        }
 
         return redirect()->route('dashboard')->with('success', 'Prompt updated successfully!');
     }
@@ -240,5 +272,25 @@ final class DashboardController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Prompt deleted successfully!');
+    }
+
+    /**
+     * Handle the chat API request for testing prompts.
+     *
+     * @param  Request  $request
+     * @return JsonResponse
+     */
+    public function chat(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'provider' => ['required', 'string', 'in:openai,gemini,anthropic,mistral'],
+            'messages' => ['required', 'array'],
+            'messages.*.role' => ['required', 'string', 'in:system,user,assistant'],
+            'messages.*.content' => ['required', 'string'],
+        ]);
+
+        $response = $this->aiRepository->chat($validated['provider'], $validated['messages']);
+
+        return response()->json($response);
     }
 }

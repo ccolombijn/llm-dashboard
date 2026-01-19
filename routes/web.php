@@ -15,6 +15,8 @@ Route::post('/prompts', [DashboardController::class, 'storePrompt'])->name('prom
 Route::get('/prompts/{key}/edit', [DashboardController::class, 'editPrompt'])->name('prompts.edit');
 Route::put('/prompts/{key}', [DashboardController::class, 'updatePrompt'])->name('prompts.update');
 Route::delete('/prompts/{key}', [DashboardController::class, 'destroyPrompt'])->name('prompts.destroy');
+Route::get('/prompts/{key}/test', [DashboardController::class, 'testPrompt'])->name('prompts.test');
+Route::post('/api/chat', [DashboardController::class, 'chat'])->name('dashboard.chat');
 
 Route::resource('profiles', ProfileController::class)->except(['index', 'show']);
 

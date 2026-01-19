@@ -18,6 +18,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default Models
+    |--------------------------------------------------------------------------
+    |
+    | These are the default models used for each provider when no specific
+    | model is requested.
+    |
+    */
+    'models' => [
+        'openai' => env('AI_MODEL_OPENAI', 'gpt-4o'),
+        'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash'),
+        'anthropic' => env('AI_MODEL_ANTHROPIC', 'claude-3-5-sonnet-20240620'),
+        'mistral' => env('AI_MODEL_MISTRAL', 'mistral-small-latest'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Files for AI Context
     |--------------------------------------------------------------------------
     |
